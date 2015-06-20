@@ -1,0 +1,10 @@
+header {
+
+}
+section {
+    width: 33%;
+    float: left;
+    min-height: 100px;
+    background-color: red;
+    border: 1px solid black;
+}
