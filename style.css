@@ -1,0 +1,97 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: #002b36; }
+
+kb-column {
+  width: 33%;
+  float: left;
+  min-height: 100px;
+  background-color: #073642;
+  border: 1px solid black;
+  margin: 0 0.1%;
+  border-radius: 8px; }
+
+kb-button {
+  display: block;
+  width: 20px;
+  height: 20px;
+  float: right;
+  background-color: white; }
+
+.drag {
+  background-color: red; }
+
+.minimise {
+  background-color: orange; }
+
+.viewboard {
+  background-color: green; }
+
+.viewparent {
+  background-color: blue; }
+
+.delete {
+  background-color: grey; }
+
+.add {
+  background-color: yellow; }
+
+.saveboard {
+  background-color: purple; }
+
+.editable-text {
+  border: none;
+  background: none;
+  display: table-cell;
+  width: 100%; }
+
+.hidden {
+  display: none; }
+
+span.title-wrap {
+  display: block;
+  overflow: hidden;
+  padding: 0 5px; }
+
+kb-card {
+  display: block;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin: 5px;
+  background-color: #002b36; }
+  kb-card .title {
+    font-size: 1.2em;
+    color: #eee8d5; }
+  kb-card .content {
+    transition: display 0.25s ease-in-out;
+    padding: 5px;
+    color: #fdf6e3; }
+
+.dragging {
+  border: 2px dashed #839496; }
+  .dragging * {
+    filter: blur(3px);
+    -webkit-filter: blur(3px); }
+
+.kb-column-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  font-family: serif;
+  margin: 14pt 5pt;
+  padding: 0;
+  color: #93a1a1; }
+
+#kb-board-title {
+  font-size: 2em;
+  font-weight: bold;
+  font-family: serif;
+  margin: 10pt 0 5pt 0;
+  padding: 0;
+  color: #93a1a1; }
+
+#kb-board-desc {
+  font-size: 1.2em;
+  font-family: serif;
+  margin: 8pt 0;
+  color: #eee8d5; }
