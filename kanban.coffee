@@ -181,12 +181,14 @@ makeContent = (value, attr) ->
 
     content
 
-makeButton = (name, handler, attr) ->
+makeButton = (icon_name, handler, attr) ->
     button = document.createElement "kb-button"
-    button.className = name
     button.addEventListener("click", handler, false) if handler?
 
-    setAttr button, attr if attr?
+    icon = document.createElement "i"
+    icon.className = "fa fa-" + icon_name
+
+    button.appendChild icon
 
     button
 
@@ -199,15 +201,15 @@ makeCard = (card) ->
     wrap.addEventListener("dragenter", onDragOver, false)
     wrap.addEventListener("dragend", onDragEnd, false)
 
-    drag = makeButton "drag"
+    drag = makeButton "arrows"
     drag.addEventListener("mousedown", onDragHandleMouseDown, false)
     wrap.appendChild drag
 
-    wrap.appendChild makeButton "minimise", toggleMinimise
+    wrap.appendChild makeButton "ellipsis-h", toggleMinimise
 
-    wrap.appendChild makeButton "viewboard", viewChild
+    wrap.appendChild makeButton "eye", viewChild
 
-    wrap.appendChild makeButton "delete", deleteCard
+    wrap.appendChild makeButton "remove", deleteCard
 
     wrap.appendChild makeTitle card.name, {"classes": "title"}
 
@@ -221,8 +223,8 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         main = board.cards[board.root]
         board_header = document.createElement("header")
 
-        (board_header.appendChild makeButton "viewparent", viewParent) unless main.id is 0
-        board_header.appendChild makeButton "saveboard", kanban.saveBoard
+        (board_header.appendChild makeButton "arrow-up", viewParent) unless main.id is 0
+        board_header.appendChild makeButton "save", kanban.saveBoard
 
         board_header.appendChild makeTitle main.name, {id: "kb-board-title", data: {"kb-id": main.id}}
         board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
@@ -233,7 +235,7 @@ kanban.drawBoard = (board, objectStore, recursed) ->
                 column = document.createElement("kb-column")
                 column.setAttribute "data-column-id", index
 
-                column.appendChild makeButton "add", addCard
+                column.appendChild makeButton "plus", addCard
 
                 column.appendChild makeTitle name, {classes: "kb-column-title"}
 
