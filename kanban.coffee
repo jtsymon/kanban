@@ -126,14 +126,21 @@ addCard = (e) ->
         name: "New card",
         desc: "",
         columns: ["TODO", "IN PROGRESS", "REVIEW"],
-        cards: [ [], [], [] ]
+        cards: [ [], [], [] ],
+        parent: kanban.board.root
     }
     request = objectStore.add(card)
     request.onsuccess = () ->
-        card.id = request.result.id
+        card.id = request.result
         kanban.board.cards.push(card)
         kanban.board.cards[kanban.board.root].cards[index].push(card.id)
         column.appendChild makeCard card
+
+viewChild = (e) ->
+    kanban.drawBoard parseInt this.parentElement.getAttribute "data-kb-id"
+
+viewParent = (e) ->
+    kanban.drawBoard kanban.board.cards[kanban.board.root].parent
 
 setAttr = (elem, attr) ->
     return unless attr?
@@ -193,6 +200,9 @@ makeCard = (card) ->
     wrap.appendChild drag
 
     wrap.appendChild makeButton "minimise", toggleMinimise
+
+    wrap.appendChild makeButton "viewboard", viewChild
+
     wrap.appendChild makeTitle card.name, {"classes": "title"}
 
     wrap.appendChild makeContent card.desc, ( { classes: "hidden" } if card.minimised )
@@ -205,6 +215,7 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         main = board.cards[board.root]
         board_header = document.createElement("header")
 
+        (board_header.appendChild makeButton "viewparent", viewParent) unless main.id is 0
         board_header.appendChild makeTitle main.name, {id: "kb-board-title", data: {"kb-id": main.id}}
         board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
 
