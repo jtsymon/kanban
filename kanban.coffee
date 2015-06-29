@@ -20,7 +20,7 @@ kanban.beginTransaction = (mode) ->
 kanban.reset = () ->
     indexedDB.deleteDatabase("kanban")
 
-kanban.updateCard = (card, objectStore, callback) ->
+updateCard = (card, objectStore, callback) ->
     throw "Usage: updateCard(card, [objectStore])" unless card?
     throw "Board must have a name" unless card.name?
     objectStore ?= kanban.beginTransaction("readwrite")
@@ -92,7 +92,7 @@ onDragOver = (e) ->
     e.preventDefault() unless kanban.draggedElement is this
 
 onDragStart = (e) ->
-    setTimeout((() -> kanban.draggedElement.classList.add "dragging"), 0)
+    setTimeout((() -> kanban.draggedElement.classList.add "dragging"), 0) if kanban.draggedElement?
     e.dataTransfer.setData('Text', this.id)
 
 onDragEnd = (e) ->
@@ -131,43 +131,68 @@ onDropColumn = (e) ->
 toggleMinimise = (e) ->
     this.parentElement.getElementsByClassName("content")[0].classList.toggle("hidden")
 
+setAttr = (elem, attr) ->
+    return unless attr?
+    if attr.id?
+        elem.id = attr.id
+    if attr.classes?
+        elem.className += " " + attr.classes
+    if attr.data?
+        for key, value of attr.data
+            do (key, value) ->
+                elem.setAttribute "data-" + key, value
+
+makeTitle = (value, attr) ->
+    title = document.createElement "input"
+    title.setAttribute "type", "text"
+    title.className = "editable-text"
+    title.value = value
+
+    setAttr title, attr if attr?
+
+    wrap = document.createElement "span"
+    wrap.className = "title-wrap"
+    wrap.appendChild title
+
+    wrap
+
+makeContent = (value, attr) ->
+    content = document.createElement("p")
+    content.className = "content"
+    content.setAttribute("contenteditable", true)
+    content.innerHTML = value
+
+    setAttr content, attr if attr?
+
+    content
+
+makeButton = (name, handler, attr) ->
+    button = document.createElement "div"
+    button.className = name + " button"
+    button.addEventListener("click", handler, false) if handler?
+
+    setAttr button, attr if attr?
+
+    button
+
 drawCard = (card) ->
     wrap = document.createElement("div")
     wrap.className = "kb-card"
     wrap.setAttribute("data-kb-id", card.id)
-
-    title_span = document.createElement("span")
-
-    title = document.createElement("input")
-    title.className = "title editable-text"
-    title.setAttribute("type", "text")
-    title.value = card.name
-
-    title_span.appendChild(title)
-
-    handle = document.createElement("div")
-    handle.className = "drag button"
-    handle.addEventListener("mousedown", onDragHandleMouseDown, false)
-
-    minimise = document.createElement("div")
-    minimise.className = "minimise button"
-    minimise.addEventListener("click", toggleMinimise, false)
 
     wrap.addEventListener("dragstart", onDragStart, false)
     wrap.addEventListener("dragover", onDragOver, false)
     wrap.addEventListener("dragenter", onDragOver, false)
     wrap.addEventListener("dragend", onDragEnd, false)
 
-    content = document.createElement("p")
-    content.className = "content"
-    content.setAttribute("contenteditable", true)
-    content.innerHTML = card.desc
-    content.classList.add("hidden") if card.minimised
+    drag = makeButton "drag"
+    drag.addEventListener("mousedown", onDragHandleMouseDown, false)
+    wrap.appendChild drag
 
-    wrap.appendChild(handle)
-    wrap.appendChild(minimise)
-    wrap.appendChild(title_span)
-    wrap.appendChild(content)
+    wrap.appendChild makeButton "minimise", toggleMinimise
+    wrap.appendChild makeTitle card.name, {"classes": "title"}
+
+    wrap.appendChild makeContent card.desc, ( { classes: "hidden" } if card.minimised )
 
     wrap
 
@@ -176,27 +201,16 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         document.body.innerHTML = "";
         main = board.cards[board.root]
         board_header = document.createElement("header")
-        board_title = document.createElement("input")
-        board_title.id = "kb-board-title"
-        board_title.className = "editable-text"
-        board_title.setAttribute("type", "text")
-        board_title.setAttribute("data-kb-id", main.id)
-        board_title.value = main.name
-        board_header.appendChild(board_title)
-        board_desc = document.createElement("p")
-        board_desc.id = "kb-board-desc"
-        board_desc.setAttribute("contenteditable", true)
-        board_desc.innerHTML = main.desc
-        board_header.appendChild(board_desc)
+
+        board_header.appendChild makeTitle main.name, {id: "kb-board-title", data: {"kb-id": main.id}}
+        board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
+
         document.body.appendChild(board_header)
         for column, index in main.columns
             do (column, index) ->
                 section = document.createElement("section")
-                column_title = document.createElement("input")
-                column_title.className = "kb-column-title editable-text"
-                column_title.setAttribute("type", "text")
-                column_title.value = column;
-                section.appendChild column_title
+
+                section.appendChild makeTitle column, {classes: "kb-column-title"}
 
                 section.addEventListener("dragover", onDragOver, false)
                 section.addEventListener("dragenter", onDragOver, false)
@@ -234,10 +248,10 @@ kanban.saveBoard = () ->
                         kanban.board.cards[card_id].name = card.getElementsByClassName("title")[0].value
                         kanban.board.cards[card_id].minimised = content.classList.contains("hidden")
                         kanban.board.cards[card_id].desc = content.innerHTML
-                        kanban.updateCard(kanban.board.cards[card_id], objectStore)
+                        updateCard(kanban.board.cards[card_id], objectStore)
                         card_id
             )
-    kanban.updateCard(board, objectStore)
+    updateCard(board, objectStore)
     undefined
 
 unless indexedDB
