@@ -28,9 +28,10 @@ section
   border-radius: 8px
 
 .editable-text
-  width: 100%
   border: none
   background: none
+  display: table-cell
+  width: 100%
 
 .kb-card
   border: 1px solid black
@@ -40,9 +41,18 @@ section
   .title
     font-size: 1.2em
     color: $base2
+  span
+    display: block
+    overflow: hidden
+    padding: 0 5px
   .content
     padding: 5px
     color: $base3
+  .drag-handle
+    background-color: red
+    width: 20px
+    height: 20px
+    float: right
 
 .kb-column-title
   font-size: 1.5em

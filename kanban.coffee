@@ -5,7 +5,7 @@ IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyR
 kanban = {
     db: null,
     board: null,
-    internal: {}
+    draggedElement: null
 }
 window.kanban = kanban
 
@@ -84,22 +84,79 @@ kanban.loadBoard = (id, objectStore, callback) ->
     ).bind(board))
     board
 
-kanban.internal.drawCard = (card) ->
+onDragHandleMouseDown = (e) ->
+    kanban.draggedElement = this.parentElement
+    this.parentElement.draggable = true
+
+onDragOver = (e) ->
+    e.preventDefault() unless kanban.draggedElement is this
+
+onDragStart = (e) ->
+    e.dataTransfer.setData('Text', this.id)
+
+onDragEnd = (e) ->
+    if this is kanban.draggedElement
+        kanban.draggedElement = null
+        this.draggable = false
+
+onDropColumn = (e) ->
+    return unless kanban.draggedElement? and this.tagName is "SECTION"
+    card = e.target.closest('.kb-card')
+    return if card is kanban.draggedElement
+    rect = if card is null
+        this.getBoundingClientRect()
+    else
+        card.getBoundingClientRect()
+    kanban.draggedElement.parentElement.removeChild(kanban.draggedElement)
+    if card is null
+        if e.clientY < rect.y + rect.height / 2
+            card = this.getElementsByClassName("kb-card")[0]
+            if card?
+                this.insertBefore(kanban.draggedElement, card)
+                return
+            # fall through to append if the list is empty
+        this.appendChild(kanban.draggedElement)
+    else
+        if e.clientY < rect.y + rect.height / 2
+            this.insertBefore(kanban.draggedElement, card)
+        else
+            card = card.nextElementSibling
+            if card?
+                this.insertBefore(kanban.draggedElement, card)
+            else
+                this.appendChild(kanban.draggedElement)
+
+
+drawCard = (card) ->
     wrap = document.createElement("div")
-    wrap.className = "kb-card";
+    wrap.className = "kb-card"
     wrap.setAttribute("data-kb-id", card.id)
+
+    title_span = document.createElement("span")
 
     title = document.createElement("input")
     title.className = "title editable-text"
     title.setAttribute("type", "text")
     title.value = card.name
 
+    title_span.appendChild(title)
+
+    handle = document.createElement("div")
+    handle.className = "drag-handle"
+    handle.addEventListener("mousedown", onDragHandleMouseDown, false)
+
+    wrap.addEventListener("dragstart", onDragStart, false)
+    wrap.addEventListener("dragover", onDragOver, false)
+    wrap.addEventListener("dragenter", onDragOver, false)
+    wrap.addEventListener("dragend", onDragEnd, false)
+
     content = document.createElement("p")
     content.className = "content"
     content.setAttribute("contenteditable", true)
     content.innerHTML = card.desc
 
-    wrap.appendChild(title)
+    wrap.appendChild(handle)
+    wrap.appendChild(title_span)
     wrap.appendChild(content)
 
     wrap
@@ -130,7 +187,13 @@ kanban.drawBoard = (board, objectStore, recursed) ->
                 column_title.setAttribute("type", "text")
                 column_title.value = column;
                 section.appendChild column_title
-                section.appendChild kanban.internal.drawCard board.cards[card] for card in main.cards[index]
+
+                section.addEventListener("dragover", onDragOver, false)
+                section.addEventListener("dragenter", onDragOver, false)
+                section.addEventListener("dragend", onDragEnd, false)
+                section.addEventListener("drop", onDropColumn, false)
+
+                section.appendChild drawCard board.cards[card] for card in main.cards[index]
                 document.body.appendChild(section)
         kanban.board = board
         undefined
