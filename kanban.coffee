@@ -162,6 +162,7 @@ drawCard = (card) ->
     content.className = "content"
     content.setAttribute("contenteditable", true)
     content.innerHTML = card.desc
+    content.classList.add("hidden") if card.minimised
 
     wrap.appendChild(handle)
     wrap.appendChild(minimise)
@@ -229,8 +230,10 @@ kanban.saveBoard = () ->
                         card_id = parseInt card.getAttribute "data-kb-id"
                         if card_id is NaN
                             return kanban.error "Invalid card id: " + card_id
+                        content = card.getElementsByClassName("content")[0]
                         kanban.board.cards[card_id].name = card.getElementsByClassName("title")[0].value
-                        kanban.board.cards[card_id].desc = card.getElementsByClassName("content")[0].innerHTML
+                        kanban.board.cards[card_id].minimised = content.classList.contains("hidden")
+                        kanban.board.cards[card_id].desc = content.innerHTML
                         kanban.updateCard(kanban.board.cards[card_id], objectStore)
                         card_id
             )
