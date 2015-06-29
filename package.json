@@ -1,0 +1,16 @@
+{
+    "name": "kanban",
+    "version": "0.0.1",
+    "eslintConfig": {
+        "ecmaFeatures": {
+            "blockBindings": true
+        },
+        "env": {
+            "browser": true,
+            "es6": true
+        },
+        "rules": {
+            "no-console": 0
+        }
+    }
+}
