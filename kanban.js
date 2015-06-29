@@ -276,16 +276,15 @@
     return content;
   };
 
-  makeButton = function(name, handler, attr) {
-    var button;
+  makeButton = function(icon_name, handler, attr) {
+    var button, icon;
     button = document.createElement("kb-button");
-    button.className = name;
     if (handler != null) {
       button.addEventListener("click", handler, false);
     }
-    if (attr != null) {
-      setAttr(button, attr);
-    }
+    icon = document.createElement("i");
+    icon.className = "fa fa-" + icon_name;
+    button.appendChild(icon);
     return button;
   };
 
@@ -297,12 +296,12 @@
     wrap.addEventListener("dragover", onDragOver, false);
     wrap.addEventListener("dragenter", onDragOver, false);
     wrap.addEventListener("dragend", onDragEnd, false);
-    drag = makeButton("drag");
+    drag = makeButton("arrows");
     drag.addEventListener("mousedown", onDragHandleMouseDown, false);
     wrap.appendChild(drag);
-    wrap.appendChild(makeButton("minimise", toggleMinimise));
-    wrap.appendChild(makeButton("viewboard", viewChild));
-    wrap.appendChild(makeButton("delete", deleteCard));
+    wrap.appendChild(makeButton("ellipsis-h", toggleMinimise));
+    wrap.appendChild(makeButton("eye", viewChild));
+    wrap.appendChild(makeButton("remove", deleteCard));
     wrap.appendChild(makeTitle(card.name, {
       "classes": "title"
     }));
@@ -319,9 +318,9 @@
       main = board.cards[board.root];
       board_header = document.createElement("header");
       if (main.id !== 0) {
-        board_header.appendChild(makeButton("viewparent", viewParent));
+        board_header.appendChild(makeButton("arrow-up", viewParent));
       }
-      board_header.appendChild(makeButton("saveboard", kanban.saveBoard));
+      board_header.appendChild(makeButton("save", kanban.saveBoard));
       board_header.appendChild(makeTitle(main.name, {
         id: "kb-board-title",
         data: {
@@ -337,7 +336,7 @@
         var card, column, j, len1, ref1;
         column = document.createElement("kb-column");
         column.setAttribute("data-column-id", index);
-        column.appendChild(makeButton("add", addCard));
+        column.appendChild(makeButton("plus", addCard));
         column.appendChild(makeTitle(name, {
           classes: "kb-column-title"
         }));

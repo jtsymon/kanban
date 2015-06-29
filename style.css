@@ -17,28 +17,8 @@ kb-button {
   width: 20px;
   height: 20px;
   float: right;
-  background-color: white; }
-
-.drag {
-  background-color: red; }
-
-.minimise {
-  background-color: orange; }
-
-.viewboard {
-  background-color: green; }
-
-.viewparent {
-  background-color: blue; }
-
-.delete {
-  background-color: grey; }
-
-.add {
-  background-color: yellow; }
-
-.saveboard {
-  background-color: purple; }
+  color: #839496;
+  cursor: default; }
 
 .editable-text {
   border: none;
