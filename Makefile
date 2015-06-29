@@ -6,7 +6,7 @@ prepare:
 	[ -d $(OUTPUT) ] || mkdir $(OUTPUT)
 
 clean:
-	rm -r $(OUTPUT)
+	rm -r $(OUTPUT) || :
 
 $(OUTPUT)/%.css: %.sass
 	sass $< > $@

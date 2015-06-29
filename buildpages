@@ -1,11 +1,15 @@
 #!/usr/bin/env sh
 
+set -e
 cd $(dirname $0)
+git checkout master
+REVISION=$(git rev-parse master)
 OUTPUT=/tmp/kanban-build-$USER
 export OUTPUT
 make clean build
 git checkout gh-pages
-rm -If *
+rm -I *
 mv $OUTPUT/* .
 git add .
-git commit -a
+git commit -m "Updated to $REVISION"
+git push
