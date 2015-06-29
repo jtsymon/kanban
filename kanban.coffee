@@ -27,19 +27,6 @@ updateCard = (card, objectStore, callback) ->
     request = objectStore.put(card)
     request.onsuccess = callback
 
-kanban.addBoard = (parent, json, objectStore) ->
-    throw "Usage: addBoard(parent, json, [objectStore])" unless parent? and json?
-    throw "Board must have a name" unless json.name?
-    objectStore ?= kanban.beginTransaction("readwrite")
-    json.columns ?= ["TODO", "IN PROGRESS", "REVIEW"]
-    json.cards ?= [ [], [], [] ]
-    request = objectStore.add(json)
-    request.onsuccess = () ->
-        kanban.loadCard(parent, objectStore, (parentBoard) ->
-            parentBoard.cards[0].push(request.result)
-            update = objectStore.put(parentBoard)
-            update.onsuccess = () -> kanban.drawBoard(parent))
-
 kanban.loadCard = (id, objectStore, callback) ->
     if (Object.prototype.toString.call(objectStore) is "[object Function]")
         [callback, objectStore] = [objectStore, callback]
@@ -102,8 +89,8 @@ onDragEnd = (e) ->
         this.draggable = false
 
 onDropColumn = (e) ->
-    return unless kanban.draggedElement? and this.tagName is "SECTION"
-    card = e.target.closest('.kb-card')
+    return unless kanban.draggedElement? and this.tagName is "KB-COLUMN"
+    card = e.target.closest('kb-card')
     return if card is kanban.draggedElement
     rect = if card is null
         this.getBoundingClientRect()
@@ -112,7 +99,7 @@ onDropColumn = (e) ->
     kanban.draggedElement.parentElement.removeChild(kanban.draggedElement)
     if card is null
         if e.clientY < rect.y + rect.height / 2
-            card = this.getElementsByClassName("kb-card")[0]
+            card = this.getElementsByTagName("kb-card")[0]
             if card?
                 this.insertBefore(kanban.draggedElement, card)
                 return
@@ -130,6 +117,23 @@ onDropColumn = (e) ->
 
 toggleMinimise = (e) ->
     this.parentElement.getElementsByClassName("content")[0].classList.toggle("hidden")
+
+addCard = (e) ->
+    column = this.parentElement
+    index = column.getAttribute "data-column-id"
+    objectStore = kanban.beginTransaction("readwrite")
+    card = {
+        name: "New card",
+        desc: "",
+        columns: ["TODO", "IN PROGRESS", "REVIEW"],
+        cards: [ [], [], [] ]
+    }
+    request = objectStore.add(card)
+    request.onsuccess = () ->
+        card.id = request.result.id
+        kanban.board.cards.push(card)
+        kanban.board.cards[kanban.board.root].cards[index].push(card.id)
+        column.appendChild makeCard card
 
 setAttr = (elem, attr) ->
     return unless attr?
@@ -167,17 +171,16 @@ makeContent = (value, attr) ->
     content
 
 makeButton = (name, handler, attr) ->
-    button = document.createElement "div"
-    button.className = name + " button"
+    button = document.createElement "kb-button"
+    button.className = name
     button.addEventListener("click", handler, false) if handler?
 
     setAttr button, attr if attr?
 
     button
 
-drawCard = (card) ->
-    wrap = document.createElement("div")
-    wrap.className = "kb-card"
+makeCard = (card) ->
+    wrap = document.createElement("kb-card")
     wrap.setAttribute("data-kb-id", card.id)
 
     wrap.addEventListener("dragstart", onDragStart, false)
@@ -206,19 +209,22 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
 
         document.body.appendChild(board_header)
-        for column, index in main.columns
-            do (column, index) ->
-                section = document.createElement("section")
+        for name, index in main.columns
+            do (name, index) ->
+                column = document.createElement("kb-column")
+                column.setAttribute "data-column-id", index
 
-                section.appendChild makeTitle column, {classes: "kb-column-title"}
+                column.appendChild makeButton "add", addCard
 
-                section.addEventListener("dragover", onDragOver, false)
-                section.addEventListener("dragenter", onDragOver, false)
-                section.addEventListener("dragend", onDragEnd, false)
-                section.addEventListener("drop", onDropColumn, false)
+                column.appendChild makeTitle name, {classes: "kb-column-title"}
 
-                section.appendChild drawCard board.cards[card] for card in main.cards[index]
-                document.body.appendChild(section)
+                column.addEventListener("dragover", onDragOver, false)
+                column.addEventListener("dragenter", onDragOver, false)
+                column.addEventListener("dragend", onDragEnd, false)
+                column.addEventListener("drop", onDropColumn, false)
+
+                column.appendChild makeCard board.cards[card] for card in main.cards[index]
+                document.body.appendChild(column)
         kanban.board = board
         undefined
     else unless recursed
@@ -235,11 +241,11 @@ kanban.saveBoard = () ->
     board.name = board_title.value
     board.desc = document.getElementById("kb-board-desc").innerHTML;
     objectStore = kanban.beginTransaction("readwrite")
-    for column, index in document.body.getElementsByTagName("section")
+    for column, index in document.body.getElementsByTagName("kb-column")
         do (column, index) ->
             board.columns[index] = column.getElementsByClassName("kb-column-title")[0].value
             board.cards[index] = (
-                for card in column.getElementsByClassName("kb-card")
+                for card in column.getElementsByTagName("kb-card")
                     do (card) ->
                         card_id = parseInt card.getAttribute "data-kb-id"
                         if card_id is NaN

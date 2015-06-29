@@ -15,10 +15,12 @@ $blue:      #268bd2
 $cyan:      #2aa198
 $green:     #859900
 
-body
+html, body
+  height: 100%
+  margin: 0
   background-color: $base03
 
-section
+kb-column
   width: 33%
   float: left
   min-height: 100px
@@ -26,6 +28,14 @@ section
   border: 1px solid black
   margin: 0 0.1%
   border-radius: 8px
+  .add
+    background-color: yellow
+
+kb-button
+  display: block
+  width: 20px
+  height: 20px
+  float: right
 
 .editable-text
   border: none
@@ -41,7 +51,8 @@ span.title-wrap
   overflow: hidden
   padding: 0 5px
 
-.kb-card
+kb-card
+  display: block
   border: 1px solid black
   border-radius: 5px
   margin: 5px
@@ -53,10 +64,6 @@ span.title-wrap
     transition: display .25s ease-in-out
     padding: 5px
     color: $base3
-  .button
-    width: 20px
-    height: 20px
-    float: right
   .drag
     background-color: red
   .minimise
