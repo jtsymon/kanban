@@ -92,10 +92,12 @@ onDragOver = (e) ->
     e.preventDefault() unless kanban.draggedElement is this
 
 onDragStart = (e) ->
+    setTimeout((() -> kanban.draggedElement.classList.add "dragging"), 0)
     e.dataTransfer.setData('Text', this.id)
 
 onDragEnd = (e) ->
     if this is kanban.draggedElement
+        kanban.draggedElement.classList.remove "dragging"
         kanban.draggedElement = null
         this.draggable = false
 
