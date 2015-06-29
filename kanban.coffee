@@ -132,7 +132,7 @@ addCard = (e) ->
     request = objectStore.add(card)
     request.onsuccess = () ->
         card.id = request.result
-        kanban.board.cards.push(card)
+        kanban.board.cards[card.id] = card
         kanban.board.cards[kanban.board.root].cards[index].push(card.id)
         column.appendChild makeCard card
 
@@ -141,6 +141,10 @@ viewChild = (e) ->
 
 viewParent = (e) ->
     kanban.drawBoard kanban.board.cards[kanban.board.root].parent
+
+deleteCard = (e) ->
+    index = parseInt this.parentElement.getAttribute "data-kb-id"
+    this.parentElement.parentElement.removeChild this.parentElement
 
 setAttr = (elem, attr) ->
     return unless attr?
@@ -203,6 +207,8 @@ makeCard = (card) ->
 
     wrap.appendChild makeButton "viewboard", viewChild
 
+    wrap.appendChild makeButton "delete", deleteCard
+
     wrap.appendChild makeTitle card.name, {"classes": "title"}
 
     wrap.appendChild makeContent card.desc, ( { classes: "hidden" } if card.minimised )
@@ -216,6 +222,8 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         board_header = document.createElement("header")
 
         (board_header.appendChild makeButton "viewparent", viewParent) unless main.id is 0
+        board_header.appendChild makeButton "saveboard", kanban.saveBoard
+
         board_header.appendChild makeTitle main.name, {id: "kb-board-title", data: {"kb-id": main.id}}
         board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
 
@@ -248,19 +256,24 @@ kanban.drawBoard = (board, objectStore, recursed) ->
 
 kanban.saveBoard = () ->
     board_title = document.getElementById("kb-board-title");
-    board = kanban.board.cards[board_title.getAttribute("data-kb-id")]
-    board.name = board_title.value
-    board.desc = document.getElementById("kb-board-desc").innerHTML;
+    root = kanban.board.cards[board_title.getAttribute("data-kb-id")]
+    root.name = board_title.value
+    root.desc = document.getElementById("kb-board-desc").innerHTML;
+    delete_cards = new Set
+    delete_cards.add card for card in column for column in root.cards
     objectStore = kanban.beginTransaction("readwrite")
+    # update columns
     for column, index in document.body.getElementsByTagName("kb-column")
         do (column, index) ->
-            board.columns[index] = column.getElementsByClassName("kb-column-title")[0].value
-            board.cards[index] = (
+            root.columns[index] = column.getElementsByClassName("kb-column-title")[0].value
+            root.cards[index] = (
                 for card in column.getElementsByTagName("kb-card")
                     do (card) ->
+                        # update cards
                         card_id = parseInt card.getAttribute "data-kb-id"
                         if card_id is NaN
                             return kanban.error "Invalid card id: " + card_id
+                        delete_cards.delete card_id
                         content = card.getElementsByClassName("content")[0]
                         kanban.board.cards[card_id].name = card.getElementsByClassName("title")[0].value
                         kanban.board.cards[card_id].minimised = content.classList.contains("hidden")
@@ -268,7 +281,10 @@ kanban.saveBoard = () ->
                         updateCard(kanban.board.cards[card_id], objectStore)
                         card_id
             )
-    updateCard(board, objectStore)
+    delete_cards.forEach (card) ->
+        console.log card
+        objectStore.delete card
+    updateCard(root, objectStore)
     undefined
 
 unless indexedDB
