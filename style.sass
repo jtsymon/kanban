@@ -33,6 +33,9 @@ section
   display: table-cell
   width: 100%
 
+.hidden
+  display: none
+
 .kb-card
   border: 1px solid black
   border-radius: 5px
@@ -46,13 +49,17 @@ section
     overflow: hidden
     padding: 0 5px
   .content
+    transition: display .25s ease-in-out
     padding: 5px
     color: $base3
-  .drag-handle
-    background-color: red
+  .button
     width: 20px
     height: 20px
     float: right
+  .drag
+    background-color: red
+  .minimise
+    background-color: orange
 
 .dragging
   border: 2px dashed $base0

@@ -128,6 +128,8 @@ onDropColumn = (e) ->
             else
                 this.appendChild(kanban.draggedElement)
 
+toggleMinimise = (e) ->
+    this.parentElement.getElementsByClassName("content")[0].classList.toggle("hidden")
 
 drawCard = (card) ->
     wrap = document.createElement("div")
@@ -144,8 +146,12 @@ drawCard = (card) ->
     title_span.appendChild(title)
 
     handle = document.createElement("div")
-    handle.className = "drag-handle"
+    handle.className = "drag button"
     handle.addEventListener("mousedown", onDragHandleMouseDown, false)
+
+    minimise = document.createElement("div")
+    minimise.className = "minimise button"
+    minimise.addEventListener("click", toggleMinimise, false)
 
     wrap.addEventListener("dragstart", onDragStart, false)
     wrap.addEventListener("dragover", onDragOver, false)
@@ -158,6 +164,7 @@ drawCard = (card) ->
     content.innerHTML = card.desc
 
     wrap.appendChild(handle)
+    wrap.appendChild(minimise)
     wrap.appendChild(title_span)
     wrap.appendChild(content)
 
