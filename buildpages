@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+cd $(dirname $0)
+OUTPUT=/tmp/kanban-build-$USER
+export OUTPUT
+make clean build
+git checkout gh-pages
+rm -If *
+mv $OUTPUT/* .
+git add .
+git commit -a
