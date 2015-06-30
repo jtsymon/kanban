@@ -510,7 +510,7 @@
     kanban.error("Your browser doesn't support a stable version of IndexedDB.");
   }
 
-  window.onload = function() {
+  window.addEventListener("load", function() {
     var dberror, request;
     initBoard();
     request = indexedDB.open("kanban", 20);
@@ -562,6 +562,6 @@
         unique: false
       });
     };
-  };
+  });
 
 }).call(this);
