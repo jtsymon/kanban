@@ -1,3 +1,6 @@
 #!/usr/bin/env sh
 
+# hack to rebuild sass when components changed
+ls sass/*.sass | entr touch style.sass &
+
 ls *.coffee *.sass *.html | entr make

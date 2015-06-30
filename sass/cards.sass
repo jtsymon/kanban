@@ -1,0 +1,24 @@
+@import colours
+kb-card
+  display: block
+  border: 1px solid black
+  border-radius: 5px
+  margin: 5px
+  background-color: $base03
+  .title
+    font-size: 1.2em
+    color: $base2
+  .content
+    transition: display .25s ease-in-out
+    padding: 5px
+    color: $base3
+
+.dragging
+  border: 2px dashed $base0
+  *
+    filter: blur(3px)
+    -webkit-filter: blur(3px)
+
+.hidden
+  display: none
+

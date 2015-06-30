@@ -1,4 +1,5 @@
 OUTPUT ?= build
+SASS_PATH=sass/
 
 build: prepare $(OUTPUT)/index.html $(OUTPUT)/style.css $(OUTPUT)/kanban.js
 
@@ -9,7 +10,7 @@ clean:
 	rm -r $(OUTPUT) || :
 
 $(OUTPUT)/%.css: %.sass
-	sass $< > $@
+	sass -I $(SASS_PATH) $< > $@
 
 $(OUTPUT)/%.js: %.coffee
 	coffee -cs <$< > $@
