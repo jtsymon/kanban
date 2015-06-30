@@ -38,6 +38,7 @@ while (<SOURCE>) {
                 open IMPORT, $path or die $!;
                 print while (<IMPORT>);
                 $success = 1;
+                close IMPORT;
                 last;
             }
         }
@@ -46,4 +47,5 @@ while (<SOURCE>) {
         print;
     }
 }
+close SOURCE;
 
