@@ -3,4 +3,7 @@
 # hack to rebuild sass when components changed
 ls sass/*.sass | entr touch style.sass &
 
+# hack to rebuild coffeescript when components changed
+ls coffee/*.coffee | entr touch kanban.coffee &
+
 ls *.coffee *.sass *.html | entr make

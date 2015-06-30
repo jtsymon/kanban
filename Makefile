@@ -13,7 +13,7 @@ $(OUTPUT)/%.css: %.sass
 	sass -I $(SASS_PATH) $< > $@
 
 $(OUTPUT)/%.js: %.coffee
-	coffee -cs <$< > $@
+	./preprop.pl -I coffee -E coffee $< | coffee -cs > $@
 
 $(OUTPUT)/%.html: %.html
 	cp $< $@
