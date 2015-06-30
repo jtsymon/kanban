@@ -1,38 +1,26 @@
-html, body {
-  height: 100%;
-  margin: 0;
-  background-color: #002b36; }
-
 kb-column {
-  width: 33%;
+  width: calc(100% - 12px);
   float: left;
   min-height: 100px;
   background-color: #073642;
   border: 1px solid black;
-  margin: 0 0.1%;
+  margin: 5px;
+  padding: 5px 0;
   border-radius: 8px; }
 
-kb-button {
-  display: block;
-  width: 20px;
-  height: 20px;
-  float: right;
-  color: #839496;
-  cursor: default; }
-
-.editable-text {
-  border: none;
-  background: none;
-  display: table-cell;
-  width: 100%; }
-
-.hidden {
-  display: none; }
-
-span.title-wrap {
-  display: block;
-  overflow: hidden;
-  padding: 0 5px; }
+@media (min-width: 720px) {
+  kb-column {
+    width: calc(50% - 12px); } }
+@media (min-width: 1000px) {
+  kb-column {
+    width: calc(33.33333% - 12px); } }
+.kb-column-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  font-family: serif;
+  margin: 14pt 5pt;
+  padding: 0;
+  color: #93a1a1; }
 
 kb-card {
   display: block;
@@ -54,13 +42,32 @@ kb-card {
     filter: blur(3px);
     -webkit-filter: blur(3px); }
 
-.kb-column-title {
-  font-size: 1.5em;
-  font-weight: bold;
-  font-family: serif;
-  margin: 14pt 5pt;
-  padding: 0;
-  color: #93a1a1; }
+.hidden {
+  display: none; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: #002b36; }
+
+kb-button {
+  display: block;
+  width: 20px;
+  height: 20px;
+  float: right;
+  color: #839496;
+  cursor: default; }
+
+.editable-text {
+  border: none;
+  background: none;
+  display: table-cell;
+  width: 100%; }
+
+span.title-wrap {
+  display: block;
+  overflow: hidden;
+  padding: 0 5px; }
 
 #kb-board-title {
   font-size: 2em;
