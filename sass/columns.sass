@@ -2,10 +2,16 @@
 
 $margin: 5px
 $border: 1px
-$width-pad: ($margin * 2) + ($border * 2)
+
+#kb-column-wrap
+  width: 100%
+  display: flex
+  flex-flow: row wrap
+  flex: 1
 
 kb-column
-  width: calc(100% - #{$width-pad})
+  flex: 1
+  min-width: 300px
   float: left
   min-height: 100px
   background-color: $base02
@@ -13,14 +19,6 @@ kb-column
   margin: $margin
   padding: $margin 0
   border-radius: 8px
-
-@media (min-width: 720px)
-  kb-column
-    width: calc(50% - #{$width-pad})
-
-@media (min-width: 1000px)
-  kb-column
-    width: calc(33.33333% - #{$width-pad})
 
 .kb-column-title
   font-size: 1.5em
