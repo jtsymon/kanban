@@ -88,16 +88,11 @@ onDragEnd = (e) ->
         kanban.draggedElement = null
         this.draggable = false
 
-onDropColumn = (e) ->
-    return unless kanban.draggedElement? and this.tagName is "KB-COLUMN"
+moveCard = (e) ->
     card = e.target.closest('kb-card')
     return if card is kanban.draggedElement
-    rect = if card is null
-        this.getBoundingClientRect()
-    else
-        card.getBoundingClientRect()
-    kanban.draggedElement.parentElement.removeChild(kanban.draggedElement)
     if card is null
+        rect = this.getBoundingClientRect()
         if e.clientY < rect.y + rect.height / 2
             card = this.getElementsByTagName("kb-card")[0]
             if card?
@@ -106,6 +101,7 @@ onDropColumn = (e) ->
             # fall through to append if the list is empty
         this.appendChild(kanban.draggedElement)
     else
+        rect = card.getBoundingClientRect()
         if e.clientY < rect.y + rect.height / 2
             this.insertBefore(kanban.draggedElement, card)
         else
@@ -115,12 +111,30 @@ onDropColumn = (e) ->
             else
                 this.appendChild(kanban.draggedElement)
 
+moveColumn = (e) ->
+    return if this is kanban.draggedElement
+    rect = this.getBoundingClientRect()
+    if e.clientX < rect.x + rect.width / 2
+        this.parentElement.insertBefore kanban.draggedElement, this
+    else if this.nextElementSibling?
+        this.parentElement.insertBefore kanban.draggedElement, this.nextElementSibling
+    else
+        this.parentElement.appendChild kanban.draggedElement
+
+onDropColumn = (e) ->
+    return unless kanban.draggedElement? and this.tagName is "KB-COLUMN"
+    if kanban.draggedElement.tagName is "KB-CARD"
+        moveCard.call this, e
+    else if kanban.draggedElement.tagName is "KB-COLUMN"
+        moveColumn.call this, e
+
+
 toggleMinimise = (e) ->
     this.parentElement.getElementsByClassName("content")[0].classList.toggle("hidden")
 
 addCard = (e) ->
     column = this.parentElement
-    index = column.getAttribute "data-column-id"
+    index = Array.prototype.indexOf.call(document.body.getElementsByTagName("kb-column"), column)
     objectStore = kanban.beginTransaction("readwrite")
     card = {
         name: "New card",
@@ -129,12 +143,22 @@ addCard = (e) ->
         cards: [ [], [], [] ],
         parent: kanban.board.root
     }
+    # Add it to the database now to avoid problems
     request = objectStore.add(card)
     request.onsuccess = () ->
         card.id = request.result
         kanban.board.cards[card.id] = card
         kanban.board.cards[kanban.board.root].cards[index].push(card.id)
         column.appendChild makeCard card
+
+addColumn = (e) ->
+    kanban.DOM.wrapper.appendChild makeColumn "New Column"
+
+deleteColumn = (e) ->
+    column = this.parentElement
+    children = column.getElementsByTagName("kb-card").length
+    if children is 0 or confirm("Column has " + children + " card(s)\nDelete anyway?")
+        column.parentElement.removeChild column
 
 viewChild = (e) ->
     kanban.drawBoard parseInt this.parentElement.getAttribute "data-kb-id"
@@ -157,13 +181,15 @@ setAttr = (elem, attr) ->
             do (key, value) ->
                 elem.setAttribute "data-" + key, value
 
-makeTitle = (value, attr) ->
+makeTitle = (attr) ->
     title = document.createElement "input"
     title.setAttribute "type", "text"
     title.className = "editable-text"
-    title.value = value
 
-    setAttr title, attr if attr?
+    if attr?
+        title.value = attr.value if attr.value?
+
+        setAttr title, attr
 
     wrap = document.createElement "span"
     wrap.className = "title-wrap"
@@ -171,19 +197,23 @@ makeTitle = (value, attr) ->
 
     wrap
 
-makeContent = (value, attr) ->
+makeContent = (attr) ->
     content = document.createElement("p")
     content.className = "content"
     content.setAttribute("contenteditable", true)
-    content.innerHTML = value
 
-    setAttr content, attr if attr?
+    if attr?
+        content.innerHTML = attr.value if attr.value?
+
+        setAttr content, attr
 
     content
 
 makeButton = (icon_name, handler, attr) ->
     button = document.createElement "kb-button"
     button.addEventListener("click", handler, false) if handler?
+
+    setAttr button, attr if attr?
 
     icon = document.createElement "i"
     icon.className = "fa fa-" + icon_name
@@ -211,42 +241,47 @@ makeCard = (card) ->
 
     wrap.appendChild makeButton "remove", deleteCard
 
-    wrap.appendChild makeTitle card.name, {"classes": "title"}
+    wrap.appendChild makeTitle {value: card.name, classes: "title"}
 
-    wrap.appendChild makeContent card.desc, ( { classes: "hidden" } if card.minimised )
+    wrap.appendChild makeContent { value: card.desc, classes: "hidden" if card.minimised }
 
     wrap
 
+makeColumn = (name, cards) ->
+    column = document.createElement("kb-column")
+
+    drag = makeButton "arrows"
+    drag.addEventListener("mousedown", onDragHandleMouseDown, false)
+    column.appendChild drag
+    column.appendChild makeButton "plus", addCard
+    column.appendChild makeButton "remove", deleteColumn
+
+    column.appendChild makeTitle {value: name, classes: "kb-column-title"}
+
+    column.addEventListener("dragstart", onDragStart, false)
+    column.addEventListener("dragover", onDragOver, false)
+    column.addEventListener("dragenter", onDragOver, false)
+    column.addEventListener("dragend", onDragEnd, false)
+    column.addEventListener("drop", onDropColumn, false)
+
+    column.appendChild makeCard kanban.board.cards[card] for card in cards if cards?
+
+    column
+
+
 kanban.drawBoard = (board, objectStore, recursed) ->
     if (Object.prototype.toString.call(board) is "[object Object]")
-        document.body.innerHTML = "";
         main = board.cards[board.root]
-        board_header = document.createElement("header")
-
-        (board_header.appendChild makeButton "arrow-up", viewParent) unless main.id is 0
-        board_header.appendChild makeButton "save", kanban.saveBoard
-
-        board_header.appendChild makeTitle main.name, {id: "kb-board-title", data: {"kb-id": main.id}}
-        board_header.appendChild makeContent main.desc, {id: "kb-board-desc"}
-
-        document.body.appendChild(board_header)
+        kanban.DOM.title.value = main.name
+        kanban.DOM.title.setAttribute "data-kb-id", main.id
+        kanban.DOM.desc.innerHTML = main.desc
+        kanban.DOM.buttons.view_parent.classList.toggle("hidden", main.id is 0)
+        kanban.DOM.wrapper.innerHTML = ""
+        
+        kanban.board = board
         for name, index in main.columns
             do (name, index) ->
-                column = document.createElement("kb-column")
-                column.setAttribute "data-column-id", index
-
-                column.appendChild makeButton "plus", addCard
-
-                column.appendChild makeTitle name, {classes: "kb-column-title"}
-
-                column.addEventListener("dragover", onDragOver, false)
-                column.addEventListener("dragenter", onDragOver, false)
-                column.addEventListener("dragend", onDragEnd, false)
-                column.addEventListener("drop", onDropColumn, false)
-
-                column.appendChild makeCard board.cards[card] for card in main.cards[index]
-                document.body.appendChild(column)
-        kanban.board = board
+                kanban.DOM.wrapper.appendChild makeColumn name, main.cards[index]
         undefined
     else unless recursed
         board ?= 0
@@ -257,10 +292,10 @@ kanban.drawBoard = (board, objectStore, recursed) ->
         throw "Failed to load the board"
 
 kanban.saveBoard = () ->
-    board_title = document.getElementById("kb-board-title");
-    root = kanban.board.cards[board_title.getAttribute("data-kb-id")]
-    root.name = board_title.value
+    root = kanban.board.cards[kanban.board.root]
+    root.name = kanban.DOM.title.value
     root.desc = document.getElementById("kb-board-desc").innerHTML;
+    root.columns = []
     delete_cards = new Set
     delete_cards.add card for card in column for column in root.cards
     objectStore = kanban.beginTransaction("readwrite")
@@ -284,15 +319,39 @@ kanban.saveBoard = () ->
                         card_id
             )
     delete_cards.forEach (card) ->
-        console.log card
         objectStore.delete card
     updateCard(root, objectStore)
     undefined
+
+initBoard = () ->
+    document.body.innerHTML = "";
+    board_header = document.createElement "header"
+    
+    kanban.DOM = {
+        buttons: {
+            save_board: makeButton "save", kanban.saveBoard, {id: "kb-board-save"}
+            add_column: makeButton "plus", addColumn, {id: "kb-column-add"}
+            view_parent: makeButton "arrow-up", viewParent, {id: "kb-board-parent"}
+        }
+        title: makeTitle({id: "kb-board-title"}).firstElementChild
+        desc: makeContent {id: "kb-board-desc"}
+        wrapper: document.createElement "section"
+    }
+    board_header.appendChild button for name, button of kanban.DOM.buttons
+    board_header.appendChild kanban.DOM.title.parentElement
+    board_header.appendChild kanban.DOM.desc
+
+    document.body.appendChild board_header
+
+    kanban.DOM.wrapper.id = "kb-column-wrap"
+
+    document.body.appendChild kanban.DOM.wrapper
 
 unless indexedDB
     kanban.error("Your browser doesn't support a stable version of IndexedDB.")
 
 window.onload = () ->
+    initBoard()
     request = indexedDB.open("kanban", 20);
     dberror = (event) ->
         kanban.error("Database error: " + event.target.errorCode);
