@@ -132,7 +132,7 @@ kanban.saveBoard = () ->
 unless indexedDB
     kanban.error("Your browser doesn't support a stable version of IndexedDB.")
 
-window.onload = () ->
+window.addEventListener "load", () ->
     initBoard()
     request = indexedDB.open("kanban", 20);
     dberror = (event) ->
