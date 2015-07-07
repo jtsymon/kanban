@@ -28,7 +28,8 @@ kb-card {
   border: 1px solid black;
   border-radius: 5px;
   margin: 5px;
-  background-color: #002b36; }
+  background-color: #002b36;
+  overflow: hidden; }
   kb-card .title {
     font-size: 1.2em;
     color: #eee8d5; }
